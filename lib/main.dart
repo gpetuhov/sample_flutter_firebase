@@ -73,7 +73,14 @@ class _MyHomePageState extends State<MyHomePage> {
         child: ListTile(
           title: Text(record.name),
           trailing: Text(record.votes.toString()),
-          onTap: () => record.reference.updateData({'votes': record.votes + 1}),
+
+          // Updating shared database resources MUST be done inside transactions like this
+          // to prevent race conditions.
+          onTap: () => Firestore.instance.runTransaction((transaction) async {
+            final freshSnapshot = await transaction.get(record.reference);
+            final fresh = Record.fromSnapshot(freshSnapshot);
+            await transaction.update(record.reference, {'votes': fresh.votes + 1});
+          }),
         ),
       ),
     );
