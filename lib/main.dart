@@ -76,6 +76,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
           // Updating shared database resources MUST be done inside transactions like this
           // to prevent race conditions.
+          // If the number of votes changes between the transaction.get(...)
+          // and the transaction.update(...) calls, the current run isn't committed,
+          // and the transaction is retried. After 5 failed retries, the transaction fails.
           onTap: () => Firestore.instance.runTransaction((transaction) async {
             final freshSnapshot = await transaction.get(record.reference);
             final fresh = Record.fromSnapshot(freshSnapshot);
